@@ -94,7 +94,7 @@ Eine Option ist ein Struct mit Kommandozeilen-Buchstabe,
 #define NV_NEXT 1
 #define NV_LAST 2
 
-typedef int(*pfunc_optionMethod)(LPARAM param); 
+typedef int(*pfunc_optionMethod)(TOption option, LPARAM lparam); 
 
 typedef struct StructOption
 {
@@ -151,11 +151,11 @@ typedef struct StructOptionsForAction_l
   BOOL printGeometry = false;
 } TPrintingOptions;
 
-int optionMethod_p(LPARAM param);
+int optionMethod_p(TOPtion option, LPARAM param);
 
 /* Arrays of Actions and Options */
-#define NUM_OPTIONS_P 1
-TOption optionsFor_l[NUM_OPTIONS_P] = {option_p};
+#define NUM_OPTIONS_L 1
+TOption optionsFor_l[NUM_OPTIONS_L] = {option_p};
 
 
 #define NUM_ACTIONS 1
@@ -167,17 +167,33 @@ TOption * all_option_arrays[NUM_OPT_ARRAYS] = {optionsFor_l};
 
 /*********** PROPERTIES - ENDE ***********/
 
-int actionMethod_l(TOption * options){
-  TPrintingOptions
+BOOL callOptionMethods(TOption * options, LPARAM lparam){
 
+  for(int i = 0; i <= NUM_OPTIONS_L; ++i){
+    options[i].method(options[i],lparam);
+  }
+
+}
+
+int actionMethod_l(TOption * options){
+  TPrintingOptions printingOptions;
+  LPARAM lparam;
+  lparam = (LPARAM) &printingOptions;
+
+  callOptionMethods(options, lparam);
   printf("in actionMethod_l\n");
-  // temporay switched off
-  //EnumWindows(PrintWndHandleCallback, lparam); 
+  
+  EnumWindows(PrintWndHandleCallback, lparam); 
   return 0;
 }
 
-int optionMethod_p(void){
-  //do something
+int optionMethod_p(TOption option, LPARAM lparam){
+  
+  TPrintingOptions * printingOptions;
+  printingOptions = (TPrintingOptions *) lparam;
+
+  printingOptions->printProcessId = true;
+  
   printf("in optenMethod_p\n");
   return 0;
 }
@@ -187,7 +203,7 @@ char retrieveSingleLetterFromCommandLineArg(char * argument){
   if (argument[0] == '-' && argument[2] == 0)  return argument[1]; else return 0;
 }
 
-BOOL interateActionsAndMarkLetter(char letter, TAction * actions){
+BOOL markActionLettersAsSet(char letter, TAction * actions){
 
   for(int i = 0; i <= NUM_ACTIONS; ++i){
     if (letter == actions[i].letter){
@@ -198,10 +214,10 @@ BOOL interateActionsAndMarkLetter(char letter, TAction * actions){
   return false;
 }
 
-BOOL interateOptionsAndMarkLetter(char letter, TOption ** all_options){
+BOOL markOptionLettersAsSet(char letter, TOption ** all_options){
 
   for(int i = 0; i <= NUM_OPT_ARRAYS; ++i){
-    for(int j = 0; j <= NUM_OPTIONS_P; ++j){
+    for(int j = 0; j <= NUM_OPTIONS_L; ++j){
       if (letter == all_options[i][j].letter){
        all_options[i][j].set = true;
         return true;
@@ -220,17 +236,17 @@ void iterateCommandLine(int argc, char ** argv, TAction * actions, TOption ** al
 
     singleLetter = retrieveSingleLetterFromCommandLineArg(argv[i]);
 
-    if (interateActionsAndMarkLetter(singleLetter, actions)) continue;
+    if (markActionLettersAsSet(singleLetter, actions)) continue;
       
-    if (interateOptionsAndMarkLetter(singleLetter, all_options)) continue;
+    if (markOptionLettersAsSet(singleLetter, all_options)) continue;
       
   }
 
-  iterateActionsAndCallMethods(actions);
+  callActionMethods(actions);
 
 }
 
-void iterateActionsAndCallMethods(TAction * actions){
+void callActionMethods(TAction * actions){
   
   for(int i = 0; i <= NUM_ACTIONS; ++i){
     if (actions[i].set){
@@ -246,7 +262,7 @@ void iterateActionsAndCallMethods(TAction * actions){
 void interateOptionsAndCallMethod(TOption ** all_options, LPARAM lparam){
 
   for(int i = 0; i <= NUM_OPT_ARRAYS; ++i){
-    for(int j = 0; j <= NUM_OPTIONS_P; ++j){
+    for(int j = 0; j <= NUM_OPTIONS_L; ++j){
       if (all_options[i][j].set){
         all_options[i][j].method();
         break;
