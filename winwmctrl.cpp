@@ -43,11 +43,14 @@ static char * getWindowTitle(HWND hWnd){
 
 }
 
-static void getWindowsProcessIdWhenOptionSet(HWND hWnd, DWORD * processId){
+static void printProcessId(HWND hWnd, BOOL optionSet){
+  DWORD processId;  
   DWORD threadID;
-
-  threadID = GetWindowThreadProcessId( hWnd, processId );
-
+  
+  if (optionSet){
+    threadID = GetWindowThreadProcessId( hWnd, &processId );
+    printf("\t%d",processId);
+  }
 }
 
 static BOOL CALLBACK PrintWndHandleCallback(HWND hWnd, LPARAM lparam) {
@@ -62,12 +65,11 @@ static BOOL CALLBACK PrintWndHandleCallback(HWND hWnd, LPARAM lparam) {
       windowTitle = getWindowTitle(hWnd);
       
       if (windowTitle != NULL){ 
+        printf("%d\t%s",hWnd, windowTitle);
+        printProcessId(hWnd, printingOptions->printProcessId;
+        printf("\n")
 
-        getWindowsProcessIdWhenOptionSet(hWnd, &processId);
-
-
-        //TODO auslagern in Zeiger-Methoden, die alle ein Stück drucken (wahrscheinlich dann ohne printf)
-        wprintf(L"WinHandle:%d\tWinTitle:%s\tprocessID:%d\n",hWnd, windowTitle,processId);
+        //wprintf(L"WinHandle:%d\tWinTitle:%s\tprocessID:%d\n",hWnd, windowTitle,processId);
       }
       free(windowTitle);
     }
